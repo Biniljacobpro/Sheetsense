@@ -31,6 +31,7 @@ const FilterControls = ({ topN, setTopN, category, setCategory, chartType, setCh
       >
         <option value="bar">Bar</option>
         <option value="line">Line</option>
+        <option value="pie">Pie</option>
       </select>
     </label>
   </div>
