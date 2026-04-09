@@ -1,7 +1,7 @@
 const FilterControls = ({ topN, setTopN, category, setCategory, chartType, setChartType }) => (
   <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-3">
     <label className="text-sm text-slate-700">
-      Top N Values
+      Show Top Items
       <input
         type="number"
         min="0"

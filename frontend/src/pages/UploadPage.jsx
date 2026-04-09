@@ -26,7 +26,7 @@ const UploadPage = () => {
     <div className="mx-auto w-full max-w-4xl space-y-5 px-4 py-8">
       <h1 className="font-serif text-4xl text-slate-900">Upload Data File</h1>
       <p className="text-slate-600">
-        Expected format: column A = label, column B = numeric value.
+        Best format: column A = label and column B = value, but multiple numeric columns are also supported.
       </p>
 
       <UploadArea onFileSelected={handleFileSelected} isLoading={isLoading} />

@@ -116,7 +116,7 @@ const ChartPage = () => {
         <div>
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/dashboard")}
             className="mb-2 inline-flex items-center gap-1 rounded-full border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
           >
             <span aria-hidden="true">←</span>

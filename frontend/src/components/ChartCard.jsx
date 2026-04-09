@@ -23,7 +23,7 @@ const ChartCard = ({ data, type = "bar" }) => {
   };
 
   return (
-    <div className="h-[340px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="h-[420px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:h-[460px]">
       <ResponsiveContainer width="100%" height="100%">
         {type === "line" ? (
           <LineChart {...commonProps}>
@@ -34,17 +34,26 @@ const ChartCard = ({ data, type = "bar" }) => {
             <Line type="monotone" dataKey="value" stroke="#0f766e" strokeWidth={3} />
           </LineChart>
         ) : type === "pie" ? (
-          <PieChart>
+          <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
             <Tooltip />
-            <Legend />
+            <Legend
+              layout="vertical"
+              verticalAlign="middle"
+              align="right"
+              wrapperStyle={{
+                maxHeight: "340px",
+                overflowY: "auto",
+                paddingLeft: "10px",
+              }}
+            />
             <Pie
               data={data}
               dataKey="value"
               nameKey="label"
-              cx="50%"
+              cx="33%"
               cy="50%"
-              outerRadius={110}
-              innerRadius={45}
+              outerRadius={105}
+              innerRadius={42}
               paddingAngle={2}
             >
               {data.map((entry, index) => (
