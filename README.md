@@ -15,6 +15,7 @@ SheetSense is a full-stack web application that lets users upload CSV/XLSX files
 ## Features
 
 - Signup/Login with JWT authentication
+- Google account signup/login
 - Protected routes for app features
 - CSV/XLSX upload with validation (type + size)
 - Data parsing and cleanup (invalid rows ignored)
@@ -27,6 +28,10 @@ SheetSense is a full-stack web application that lets users upload CSV/XLSX files
 - In-app delete confirmation dialog (custom modal)
 - Inline rename on chart page (pen icon)
 - Back button on chart page
+
+## Hosted Application
+
+- Live URL: https://sheetsense-eta.vercel.app/
 
 ## Project Structure Explanation
 
