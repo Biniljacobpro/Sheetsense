@@ -1,6 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
+const { OAuth2Client } = require("google-auth-library");
 const userModel = require("../models/userModel");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const FORBIDDEN_LOCAL_PARTS = new Set([
   "admin",
@@ -138,7 +142,54 @@ const login = async ({ email, password }) => {
   };
 };
 
+const loginWithGoogle = async ({ credential }) => {
+  if (!credential) {
+    throw new Error("Google credential is required");
+  }
+
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    throw new Error("Google auth is not configured on server");
+  }
+
+  const ticket = await googleClient.verifyIdToken({
+    idToken: credential,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  const verifiedEmail = payload?.email;
+
+  if (!verifiedEmail || payload?.email_verified !== true) {
+    throw new Error("Google account email is not verified");
+  }
+
+  const normalizedEmail = normalizeEmail(verifiedEmail);
+  const emailValidation = validateEmail(normalizedEmail);
+
+  if (!emailValidation.isValid) {
+    throw new Error(emailValidation.message);
+  }
+
+  let user = await userModel.findUserByEmail(normalizedEmail);
+
+  if (!user) {
+    const randomPassword = crypto.randomBytes(24).toString("hex");
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+    user = await userModel.createUser({ email: normalizedEmail, password: hashedPassword });
+  }
+
+  return {
+    user: {
+      id: user.id,
+      email: user.email,
+      created_at: user.created_at,
+    },
+    token: signToken(user),
+  };
+};
+
 module.exports = {
   signup,
   login,
+  loginWithGoogle,
 };

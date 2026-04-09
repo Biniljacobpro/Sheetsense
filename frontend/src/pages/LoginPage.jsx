@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { login } from "../services/authService";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleAuth, login } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 
 const FORBIDDEN_LOCAL_PARTS = new Set([
@@ -57,6 +58,25 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleGoogleAuth = async (credentialResponse) => {
+    setError("");
+
+    try {
+      const credential = credentialResponse?.credential;
+
+      if (!credential) {
+        setError("Google sign-in failed. Please try again.");
+        return;
+      }
+
+      const data = await googleAuth({ credential });
+      setAuth(data);
+      navigate("/dashboard");
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Google sign-in failed");
+    }
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -172,14 +192,35 @@ const LoginPage = () => {
                 >
                   {isLoading ? "Signing in..." : "Login"}
                 </button>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-slate-300" />
+                  <span className="text-xs uppercase tracking-wide text-slate-500">or</span>
+                  <div className="h-px flex-1 bg-slate-300" />
+                </div>
+
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleAuth}
+                    onError={() => setError("Google sign-in failed")}
+                    theme="outline"
+                    size="large"
+                    shape="pill"
+                    text="continue_with"
+                    width="320"
+                  />
+                </div>
               </form>
 
-              <p className="mt-4 text-sm text-slate-600">
+              <div className="mt-6 border-t border-slate-200 pt-4 text-center text-sm text-slate-600">
                 New here?{" "}
-                <Link to="/signup" className="font-medium text-teal-700 underline">
+                <Link
+                  to="/signup"
+                  className="font-semibold text-teal-700 transition hover:text-teal-800"
+                >
                   Create account
                 </Link>
-              </p>
+              </div>
             </div>
           </section>
         </div>

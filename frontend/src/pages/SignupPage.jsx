@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { signup } from "../services/authService";
+import { GoogleLogin } from "@react-oauth/google";
+import { googleAuth, signup } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 
 const PASSWORD_RULES = [
@@ -103,6 +104,25 @@ const SignupPage = () => {
       setError(requestError.response?.data?.message || "Signup failed");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async (credentialResponse) => {
+    setError("");
+
+    try {
+      const credential = credentialResponse?.credential;
+
+      if (!credential) {
+        setError("Google sign-up failed. Please try again.");
+        return;
+      }
+
+      const data = await googleAuth({ credential });
+      setAuth(data);
+      navigate("/dashboard");
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || "Google sign-up failed");
     }
   };
 
@@ -215,14 +235,35 @@ const SignupPage = () => {
                 >
                   {isLoading ? "Creating account..." : "Signup"}
                 </button>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-px flex-1 bg-slate-300" />
+                  <span className="text-xs uppercase tracking-wide text-slate-500">or</span>
+                  <div className="h-px flex-1 bg-slate-300" />
+                </div>
+
+                <div className="flex justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogleAuth}
+                    onError={() => setError("Google sign-up failed")}
+                    theme="outline"
+                    size="large"
+                    shape="pill"
+                    text="signup_with"
+                    width="320"
+                  />
+                </div>
               </form>
 
-              <p className="mt-4 text-sm text-slate-600">
+              <div className="mt-6 border-t border-slate-200 pt-4 text-center text-sm text-slate-600">
                 Already have an account?{" "}
-                <Link to="/login" className="font-medium text-teal-700 underline">
+                <Link
+                  to="/login"
+                  className="font-semibold text-teal-700 transition hover:text-teal-800"
+                >
                   Login
                 </Link>
-              </p>
+              </div>
             </div>
           </section>
         </div>

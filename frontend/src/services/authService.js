@@ -9,3 +9,8 @@ export const login = async (payload) => {
   const response = await api.post("/auth/login", payload);
   return response.data;
 };
+
+export const googleAuth = async (payload) => {
+  const response = await api.post("/auth/google", payload);
+  return response.data;
+};
