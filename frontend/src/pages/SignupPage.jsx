@@ -3,22 +3,100 @@ import { Link, useNavigate } from "react-router-dom";
 import { signup } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 
+const PASSWORD_RULES = [
+  { label: "At least 6 characters", test: (value) => value.length >= 6 },
+  { label: "One uppercase letter", test: (value) => /[A-Z]/.test(value) },
+  { label: "One number", test: (value) => /\d/.test(value) },
+  { label: "One special character", test: (value) => /[^A-Za-z0-9]/.test(value) },
+];
+
+const FORBIDDEN_LOCAL_PARTS = new Set([
+  "admin",
+  "administrator",
+  "support",
+  "help",
+  "contact",
+  "info",
+  "sales",
+  "test",
+]);
+
+const FORBIDDEN_DOMAINS = new Set(["mailinator.com", "tempmail.com", "example.com", "test.com"]);
+
+const validateEmail = (value) => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return { isValid: false, message: "Email is required." };
+  }
+
+  if (trimmed !== trimmed.toLowerCase()) {
+    return { isValid: false, message: "Use lowercase only for email." };
+  }
+
+  const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+  if (!emailRegex.test(trimmed)) {
+    return { isValid: false, message: "Use format: name@company.com" };
+  }
+
+  const [localPart, domain] = trimmed.split("@");
+  if (FORBIDDEN_LOCAL_PARTS.has(localPart)) {
+    return { isValid: false, message: "Role-based emails like admin/support are not allowed." };
+  }
+
+  if (FORBIDDEN_DOMAINS.has(domain)) {
+    return { isValid: false, message: "Use a real business or personal domain." };
+  }
+
+  const domainRoot = domain.split(".")[0] || "";
+  if (domainRoot.length < 4) {
+    return { isValid: false, message: "Domain name should be at least 4 characters before the dot." };
+  }
+
+  return { isValid: true, message: "Looks good." };
+};
+
 const SignupPage = () => {
   const navigate = useNavigate();
   const { login: setAuth } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const passwordChecks = PASSWORD_RULES.map((rule) => ({
+    label: rule.label,
+    valid: rule.test(password),
+  }));
+
+  const missingPasswordRules = passwordChecks
+    .filter((rule) => !rule.valid)
+    .map((rule) => rule.label.toLowerCase());
+
+  const isPasswordValid = passwordChecks.every((rule) => rule.valid);
+  const emailValidation = validateEmail(email);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+
+    if (!emailValidation.isValid) {
+      setError(emailValidation.message);
+      return;
+    }
+
+    if (!isPasswordValid) {
+      setError(`Password needs: ${missingPasswordRules.join(", ")}.`);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const data = await signup({ email, password });
+      const data = await signup({ email: email.trim().toLowerCase(), password });
       setAuth(data);
       navigate("/dashboard");
     } catch (requestError) {
@@ -74,18 +152,27 @@ const SignupPage = () => {
                   type="email"
                   placeholder="Email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(event) => setEmail(event.target.value.toLowerCase())}
+                  onBlur={() => setEmailTouched(true)}
                   className="w-full rounded-xl border border-slate-300 px-4 py-3"
                   required
                 />
+                <p className={`text-xs ${emailTouched || email.length > 0 ? (emailValidation.isValid ? "text-emerald-700" : "text-amber-700") : "text-slate-500"}`}>
+                  {emailTouched || email.length > 0
+                    ? emailValidation.message
+                    : "Use lowercase email, for example: yourname@company.com"}
+                </p>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
-                    minLength={6}
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      setPasswordTouched(true);
+                    }}
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12"
+                    minLength={6}
                     required
                   />
                   <button
@@ -109,6 +196,15 @@ const SignupPage = () => {
                     )}
                   </button>
                 </div>
+
+
+                {(passwordTouched || password.length > 0) && (
+                  <p className={`text-xs ${isPasswordValid ? "text-emerald-700" : "text-amber-700"}`}>
+                    {isPasswordValid
+                      ? "Password strength looks good."
+                      : `Password needs: ${missingPasswordRules.join(", ")}.`}
+                  </p>
+                )}
 
                 {error && <p className="text-sm text-red-600">{error}</p>}
 

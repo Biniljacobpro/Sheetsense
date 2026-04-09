@@ -3,6 +3,52 @@ import { Link, useNavigate } from "react-router-dom";
 import { login } from "../services/authService";
 import { useAuth } from "../hooks/useAuth";
 
+const FORBIDDEN_LOCAL_PARTS = new Set([
+  "admin",
+  "administrator",
+  "support",
+  "help",
+  "contact",
+  "info",
+  "sales",
+  "test",
+]);
+
+const FORBIDDEN_DOMAINS = new Set(["mailinator.com", "tempmail.com", "example.com", "test.com"]);
+
+const validateEmail = (value) => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return { isValid: false, message: "Email is required." };
+  }
+
+  if (trimmed !== trimmed.toLowerCase()) {
+    return { isValid: false, message: "Use lowercase only for email." };
+  }
+
+  const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
+  if (!emailRegex.test(trimmed)) {
+    return { isValid: false, message: "Use format: name@company.com" };
+  }
+
+  const [localPart, domain] = trimmed.split("@");
+  if (FORBIDDEN_LOCAL_PARTS.has(localPart)) {
+    return { isValid: false, message: "Role-based emails like admin/support are not allowed." };
+  }
+
+  if (FORBIDDEN_DOMAINS.has(domain)) {
+    return { isValid: false, message: "Use a real business or personal domain." };
+  }
+
+  const domainRoot = domain.split(".")[0] || "";
+  if (domainRoot.length < 4) {
+    return { isValid: false, message: "Domain name should be at least 4 characters before the dot." };
+  }
+
+  return { isValid: true, message: "Looks good." };
+};
+
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login: setAuth } = useAuth();
@@ -15,10 +61,18 @@ const LoginPage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
+
+    const emailValidation = validateEmail(email);
+
+    if (!emailValidation.isValid) {
+      setError(emailValidation.message);
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const data = await login({ email, password });
+      const data = await login({ email: email.trim().toLowerCase(), password });
       setAuth(data);
       navigate("/dashboard");
     } catch (requestError) {

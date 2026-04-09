@@ -106,6 +106,12 @@ const ChartPage = () => {
     setIsRenaming(false);
   };
 
+  const handleClearFilters = () => {
+    setTopN(0);
+    setCategory("");
+    setChartType("bar");
+  };
+
   if (isLoading) {
     return <div className="p-8 text-slate-600">Loading chart...</div>;
   }
@@ -183,6 +189,7 @@ const ChartPage = () => {
         setCategory={setCategory}
         chartType={chartType}
         setChartType={setChartType}
+        onClearFilters={handleClearFilters}
       />
 
       <div ref={chartRef} className="rounded-2xl bg-white p-3">
